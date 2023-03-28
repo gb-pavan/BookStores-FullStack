@@ -32,8 +32,9 @@ const initializeDBAndServer = async () => {
       filename: dbPath,
       driver: sqlite3.Database,
     });
-    app.listen(3002, () => {
-      console.log("Server Running at http://localhost:3002/");
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+      console.log(`Server Running at http://localhost:${PORT}/`);
     });
   } catch (e) {
     console.log(`DB Error: ${e.message}`);
@@ -43,7 +44,17 @@ const initializeDBAndServer = async () => {
 
 initializeDBAndServer();
 
-app.get("/books/", async (request, response) => {
+app.use(express.static(path.join(__dirname, "./client/build")));
+app.get("*", function (_, res) {
+  res.sendFile(
+    path.join(__dirname, "./client/build/index.html"),
+    function (err) {
+      res.status(500).send(err);
+    }
+  );
+});
+
+app.get("/getbooks/", async (request, response) => {
   const getBooksQuery = `
     SELECT
       *
@@ -53,7 +64,7 @@ app.get("/books/", async (request, response) => {
   response.send(booksArray);
 });
 
-app.post("/books/", async (request, response) => {
+app.post("/addbook/", async (request, response) => {
   const bookDetails = request.body;
   console.log(bookDetails)
   const {
